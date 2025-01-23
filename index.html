@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        .leaderboard {
+            width: 60%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .leaderboard h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 60%;
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+        .form-container input, .form-container button {
+            padding: 10px;
+            margin: 5px;
+        }
+        .form-container input {
+            flex: 1;
+        }
+        .form-container button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        .toggle-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .toggle-button button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .toggle-button button:hover {
+            background-color: #0056b3;
+        }
+        .delete-icon {
+            color: #FF4B5C;
+            cursor: pointer;
+        }
+        .delete-icon:hover {
+            color: #D42D39;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard">
+        <div class="toggle-button">
+            <button onclick="toggleView()">Toggle Top 10 / Full List</button>
+        </div>
+        <h1>Leaderboard</h1>
+        <table id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="form-container">
+        <input type="text" id="name" placeholder="Enter Name" required>
+        <input type="number" id="score" placeholder="Enter Score" required>
+        <button onclick="addEntry()">Add Entry</button>
+    </div>
+
+    <script>
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+        let showTop10 = false;
+
+        function updateLeaderboard() {
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard.forEach((entry, index) => {
+                entry.rank = index + 1;
+            });
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            leaderboardBody.innerHTML = '';
+            const visibleList = showTop10 ? leaderboard.slice(0, 10) : leaderboard;
+            visibleList.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.rank}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.score}</td>
+                    <td><i class="fas fa-trash delete-icon" onclick="deleteEntry('${entry.name}')"></i></td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        function addEntry() {
+            const name = document.getElementById('name').value.trim();
+            const score = parseInt(document.getElementById('score').value.trim());
+
+            if (!name || isNaN(score)) {
+                alert('Please enter a valid name and score.');
+                return;
+            }
+
+            leaderboard.push({ name, score });
+            updateLeaderboard();
+
+            document.getElementById('name').value = '';
+            document.getElementById('score').value = '';
+        }
+
+        function deleteEntry(name) {
+            leaderboard = leaderboard.filter(entry => entry.name !== name);
+            updateLeaderboard();
+        }
+
+        function toggleView() {
+            showTop10 = !showTop10;
+            renderLeaderboard();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLeaderboard();
+
+            document.getElementById('score').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    addEntry();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
